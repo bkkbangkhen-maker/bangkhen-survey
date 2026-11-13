@@ -1,0 +1,1701 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบแบบสำรวจความต้องการของผู้รับบริการ - สำนักงานที่ดินกรุงเทพมหานคร สาขาบางเขน</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Sarabun & Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chart.js สำหรับสร้างกราฟวิเคราะห์ผล -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Font Awesome สำหรับไอคอน -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Sarabun', 'Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        dol: {
+                            50: '#f1f8e9',
+                            100: '#dcedc8',
+                            200: '#c5e1a5',
+                            600: '#2e7d32',
+                            700: '#1b5e20',
+                            800: '#144718',
+                            900: '#0d3311',
+                            gold: '#f57f17'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        :root {
+            --font-scale: 1;
+        }
+        body {
+            font-family: 'Sarabun', sans-serif;
+            font-size: calc(16px * var(--font-scale));
+            background-color: #f3f6f4;
+            color: #1f2937;
+        }
+        .scale-text {
+            font-size: calc(1rem * var(--font-scale));
+        }
+        .scale-text-sm {
+            font-size: calc(0.875rem * var(--font-scale));
+        }
+        .scale-text-lg {
+            font-size: calc(1.125rem * var(--font-scale));
+        }
+        /* Custom Radio Styling */
+        input[type="radio"] {
+            accent-color: #1b5e20;
+            width: calc(1.15rem * var(--font-scale));
+            height: calc(1.15rem * var(--font-scale));
+            cursor: pointer;
+        }
+        /* Smooth transitions */
+        .tab-content {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @media print {
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            body { background: white !important; color: black !important; font-size: 13pt; }
+            .shadow-lg, .shadow-md, .shadow-sm { box-shadow: none !important; }
+            #tab-admin { padding: 0 !important; max-width: 100% !important; }
+            .max-h-\[450px\] { max-height: none !important; overflow: visible !important; }
+            .border-gray-200 { border-color: #9ca3af !important; }
+            .print-break-inside-avoid { break-inside: avoid; page-break-inside: avoid; }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- แถบเมนูนำทางด้านบน (Navigation Bar) -->
+    <nav class="bg-dol-800 text-white shadow-md sticky top-0 z-40 no-print">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col sm:flex-row justify-between items-center py-3 gap-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-white text-dol-700 flex items-center justify-center font-bold text-xl shadow">
+                        <i class="fa-solid fa-landmark"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-base sm:text-lg leading-tight">สำนักงานที่ดินกรุงเทพมหานคร สาขาบางเขน</h1>
+                        <div class="flex items-center gap-2">
+                            <p class="text-xs text-dol-200">ระบบสำรวจความต้องการและวิเคราะห์ข้อมูลการให้บริการ</p>
+                            <span id="cloud-status-badge" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-dol-900/60 text-dol-100 border border-dol-600/40">
+                                <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span> กำลังเชื่อมต่อ...
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- ปุ่มสำหรับเจ้าหน้าที่ (ซ่อนอย่างมิดชิดในโหมดประชาชน และเปลี่ยนเป็นปุ่มออกจากระบบเมื่อล็อกอินแล้ว) -->
+                <div class="flex items-center gap-2">
+                    <button id="btn-staff-login" onclick="openAdminModal()" title="เข้าสู่ระบบสำหรับเจ้าหน้าที่" class="px-3 py-1.5 rounded-lg text-xs font-medium text-dol-200/80 hover:text-white hover:bg-dol-900/50 border border-transparent hover:border-dol-600/40 transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-key text-[11px]"></i>
+                        <span>สำหรับเจ้าหน้าที่</span>
+                    </button>
+                    <button id="btn-staff-logout" onclick="logoutAdmin()" class="hidden px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-red-600 hover:bg-red-700 text-white shadow transition flex items-center gap-2">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                        <span>ออกจากระบบ (กลับสู่หน้าแบบสำรวจ)</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- กล่องแจ้งเตือน (Custom Toast / Modal Alert แทน alert()) -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none px-4"></div>
+
+    <!-- Modal ยืนยันรหัสผ่านเจ้าหน้าที่ -->
+    <div id="pin-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-100">
+            <div class="text-center mb-4">
+                <div class="w-14 h-14 bg-dol-50 text-dol-700 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-800">เข้าสู่ระบบจัดการข้อมูลเจ้าหน้าที่</h3>
+                <p class="text-sm text-gray-500 mt-1">เฉพาะเจ้าหน้าที่สำนักงานที่ดินกรุงเทพมหานคร สาขาบางเขน</p>
+            </div>
+            <div class="space-y-4">
+                <input type="password" id="admin-pin-input" maxlength="20" placeholder="กรอกรหัสผ่านเจ้าหน้าที่..." 
+                    class="w-full text-center text-lg tracking-wider font-bold border-2 border-gray-300 rounded-xl py-3 focus:outline-none focus:border-dol-600"
+                    onkeypress="if(event.key === 'Enter') verifyAdminPin()">
+                <div class="flex gap-3">
+                    <button onclick="closePinModal()" class="flex-1 py-2.5 px-4 rounded-xl border border-gray-300 text-gray-700 font-semibold hover:bg-gray-50">ยกเลิก</button>
+                    <button onclick="verifyAdminPin()" class="flex-1 py-2.5 px-4 rounded-xl bg-dol-700 text-white font-semibold hover:bg-dol-800 shadow">เข้าสู่ระบบ</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal เปลี่ยนรหัสผ่านเจ้าหน้าที่ -->
+    <div id="change-pass-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-100">
+            <div class="flex items-center gap-3 text-dol-800 mb-4 border-b pb-3">
+                <i class="fa-solid fa-key text-xl text-dol-600"></i>
+                <h3 class="text-lg font-bold">เปลี่ยนรหัสผ่านเจ้าหน้าที่</h3>
+            </div>
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">รหัสผ่านปัจจุบัน</label>
+                    <input type="password" id="old-pass-input" class="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-dol-600">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">รหัสผ่านใหม่ (อย่างน้อย 4 ตัวอักษร)</label>
+                    <input type="password" id="new-pass-input" class="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-dol-600">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">ยืนยันรหัสผ่านใหม่</label>
+                    <input type="password" id="confirm-new-pass-input" class="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-dol-600">
+                </div>
+                <div class="flex gap-3 pt-3">
+                    <button onclick="closeChangePassModal()" class="flex-1 py-2 px-4 rounded-xl border border-gray-300 text-gray-700 text-sm font-semibold hover:bg-gray-50">ยกเลิก</button>
+                    <button onclick="saveNewPassword()" class="flex-1 py-2 px-4 rounded-xl bg-dol-700 text-white text-sm font-semibold hover:bg-dol-800">บันทึกรหัสผ่าน</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal ยืนยันการลบข้อมูล -->
+    <div id="confirm-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl">
+            <div class="flex items-center gap-3 text-red-600 mb-3">
+                <i class="fa-solid fa-triangle-exclamation text-2xl"></i>
+                <h3 id="confirm-title" class="text-lg font-bold">ยืนยันการดำเนินการ</h3>
+            </div>
+            <p id="confirm-message" class="text-gray-600 text-sm mb-6">คุณแน่ใจหรือไม่ว่าต้องการดำเนินการนี้?</p>
+            <div class="flex gap-3 justify-end">
+                <button onclick="closeConfirmModal()" class="px-4 py-2 rounded-xl border border-gray-300 text-gray-700 font-semibold hover:bg-gray-50">ยกเลิก</button>
+                <button id="confirm-ok-btn" class="px-4 py-2 rounded-xl bg-red-600 text-white font-semibold hover:bg-red-700">ยืนยัน</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- แท็บที่ 1: แบบสำรวจความต้องการ (สำหรับผู้รับบริการ)                         -->
+    <!-- ========================================================================= -->
+    <main id="tab-survey" class="tab-content flex-grow max-w-4xl w-full mx-auto px-4 py-6 sm:py-8">
+        <div class="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200">
+            <!-- ส่วนหัวแบบฟอร์ม -->
+            <div class="bg-gradient-to-r from-dol-800 via-dol-700 to-dol-600 text-white p-6 sm:p-8 text-center relative">
+                <div class="inline-block bg-white/15 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-medium mb-3 border border-white/20">
+                    กรมที่ดิน กระทรวงมหาดไทย
+                </div>
+                <h2 class="text-2xl sm:text-3xl font-bold mb-2">แบบสำรวจความต้องการของผู้รับบริการ</h2>
+                <h3 class="text-lg sm:text-xl font-medium text-dol-100 mb-4">ของสำนักงานที่ดินกรุงเทพมหานคร สาขาบางเขน</h3>
+                <p class="text-sm sm:text-base text-white/90 max-w-2xl mx-auto leading-relaxed bg-black/15 p-4 rounded-xl">
+                    แบบสอบถามฉบับนี้จัดทำขึ้นเพื่อเป็นข้อมูลในการออกแบบบริการของสำนักงานที่ดินให้สอดคล้องกับความต้องการของผู้รับบริการ 
+                    เพื่อประโยชน์ในการพัฒนาปรับปรุงงานบริการของสำนักงานที่ดินให้เกิดประโยชน์สูงสุด
+                </p>
+            </div>
+
+            <!-- แถบเครื่องมือเสริม (ปรับขนาดตัวอักษร + วันที่บันทึกสำหรับเจ้าหน้าที่คีย์ข้อมูลย้อนหลัง) -->
+            <div class="bg-dol-50 px-6 py-3 border-b border-dol-200 flex flex-wrap justify-between items-center gap-3">
+                <div class="flex items-center gap-2 text-sm text-dol-800">
+                    <i class="fa-regular fa-calendar-check"></i>
+                    <label for="survey-date" class="font-medium">วันที่รับบริการ:</label>
+                    <input type="date" id="survey-date" class="bg-white border border-dol-200 rounded-lg px-2.5 py-1 text-sm text-gray-700 focus:outline-none focus:border-dol-600">
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <span class="text-sm font-medium text-dol-800"><i class="fa-solid fa-text-height mr-1"></i>ขนาดตัวอักษร:</span>
+                    <button type="button" onclick="setFontSize(1, this)" class="font-btn active px-3 py-1 rounded-lg text-sm font-semibold bg-dol-700 text-white border border-dol-700 transition">ปกติ</button>
+                    <button type="button" onclick="setFontSize(1.2, this)" class="font-btn px-3 py-1 rounded-lg text-sm font-semibold bg-white text-dol-700 border border-dol-700 hover:bg-dol-100 transition">ใหญ่ (ผู้สูงอายุ)</button>
+                </div>
+            </div>
+
+            <!-- เนื้อหาแบบฟอร์ม -->
+            <form id="surveyForm" class="p-6 sm:p-8 space-y-8">
+                
+                <!-- ส่วนที่ 1: ข้อมูลทั่วไป -->
+                <section>
+                    <div class="flex items-center gap-2 bg-dol-50 border-l-4 border-dol-700 px-4 py-2.5 rounded-r-xl mb-5">
+                        <span class="bg-dol-700 text-white w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold">1</span>
+                        <h4 class="font-bold text-dol-800 scale-text-lg">ข้อมูลทั่วไปของผู้รับบริการ</h4>
+                    </div>
+
+                    <div class="space-y-6">
+                        <!-- 1. เพศ -->
+                        <div class="bg-gray-50/70 p-4 rounded-xl border border-gray-200/80">
+                            <label class="block font-semibold text-gray-800 mb-3 scale-text">1. เพศของผู้รับบริการ <span class="text-red-500">*</span></label>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <label class="flex items-center gap-3 bg-white p-3 rounded-xl border border-gray-200 cursor-pointer hover:border-dol-600 hover:bg-dol-50/30 transition">
+                                    <input type="radio" name="gender" value="ชาย" required>
+                                    <span class="scale-text">ชาย</span>
+                                </label>
+                                <label class="flex items-center gap-3 bg-white p-3 rounded-xl border border-gray-200 cursor-pointer hover:border-dol-600 hover:bg-dol-50/30 transition">
+                                    <input type="radio" name="gender" value="หญิง">
+                                    <span class="scale-text">หญิง</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- 2. อายุ -->
+                        <div class="bg-gray-50/70 p-4 rounded-xl border border-gray-200/80">
+                            <label class="block font-semibold text-gray-800 mb-3 scale-text">2. อายุของผู้รับบริการ <span class="text-red-500">*</span></label>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                                <label class="flex items-center gap-3 bg-white p-3 rounded-xl border border-gray-200 cursor-pointer hover:border-dol-600 hover:bg-dol-50/30 transition">
+                                    <input type="radio" name="age" value="ต่ำกว่า 20 ปี" required>
+                                    <span class="scale-text">ต่ำกว่า 20 ปี</span>
+                                </label>
+                                <label class="flex items-center gap-3 bg-white p-3 rounded-xl border border-gray-200 cursor-pointer hover:border-dol-600 hover:bg-dol-50/30 transition">
+                                    <input type="radio" name="age" value="20 - 40 ปี">
+                                    <span class="scale-text">20 - 40 ปี</span>
+                                </label>
+                                <label class="flex items-center gap-3 bg-white p-3 rounded-xl border border-gray-200 cursor-pointer hover:border-dol-600 hover:bg-dol-50/30 transition">
+                                    <input type="radio" name="age" value="41 - 60 ปี">
+                                    <span class="scale-text">41 - 60 ปี</span>
+                                </label>
+                                <label class="flex items-center gap-3 bg-white p-3 rounded-xl border border-gray-200 cursor-pointer hover:border-dol-600 hover:bg-dol-50/30 transition">
+                                    <input type="radio" name="age" value="มากกว่า 60 ปี">
+                                    <span class="scale-text">มากกว่า 60 ปี</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- 3. ข้อจำกัด -->
+                        <div class="bg-gray-50/70 p-4 rounded-xl border border-gray-200/80">
+                            <label class="block font-semibold text-gray-800 mb-3 scale-text">3. ข้อจำกัดของผู้รับบริการ <span class="text-red-500">*</span></label>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                                <label class="flex items-center gap-3 bg-white p-3 rounded-xl border border-gray-200 cursor-pointer hover:border-dol-600 hover:bg-dol-50/30 transition">
+                                    <input type="radio" name="limitation" value="ผู้พิการ">
+                                    <span class="scale-text">ผู้พิการ</span>
+                                </label>
+                                <label class="flex items-center gap-3 bg-white p-3 rounded-xl border border-gray-200 cursor-pointer hover:border-dol-600 hover:bg-dol-50/30 transition">
+                                    <input type="radio" name="limitation" value="ผู้สูงอายุ">
+                                    <span class="scale-text">ผู้สูงอายุ</span>
+                                </label>
+                                <label class="flex items-center gap-3 bg-white p-3 rounded-xl border border-gray-200 cursor-pointer hover:border-dol-600 hover:bg-dol-50/30 transition">
+                                    <input type="radio" name="limitation" value="ภิกษุ/สามเณร">
+                                    <span class="scale-text">ภิกษุ/สามเณร</span>
+                                </label>
+                                <label class="flex items-center gap-3 bg-white p-3 rounded-xl border border-gray-200 cursor-pointer hover:border-dol-600 hover:bg-dol-50/30 transition">
+                                    <input type="radio" name="limitation" value="อื่นๆ / ทั่วไป" checked>
+                                    <span class="scale-text">อื่นๆ / ทั่วไป</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- 4. ประเภทงานที่รับบริการ -->
+                        <div class="bg-gray-50/70 p-4 rounded-xl border border-gray-200/80">
+                            <label class="block font-semibold text-gray-800 mb-3 scale-text">4. ประเภทงานที่รับบริการ <span class="text-red-500">*</span></label>
+                            <div class="grid grid-cols-1 gap-3">
+                                <label class="flex items-center gap-3 bg-white p-3.5 rounded-xl border border-gray-200 cursor-pointer hover:border-dol-600 hover:bg-dol-50/30 transition">
+                                    <input type="radio" name="service_type" value="จดทะเบียน (ขาย ให้ จำนอง มรดก ใบแทน)" required>
+                                    <span class="scale-text">จดทะเบียน (เช่น ขาย ให้ จำนอง มรดก ใบแทน)</span>
+                                </label>
+                                <label class="flex items-center gap-3 bg-white p-3.5 rounded-xl border border-gray-200 cursor-pointer hover:border-dol-600 hover:bg-dol-50/30 transition">
+                                    <input type="radio" name="service_type" value="รังวัดที่ดิน">
+                                    <span class="scale-text">รังวัดที่ดิน</span>
+                                </label>
+                                <div class="flex flex-col sm:flex-row sm:items-center gap-3 bg-white p-3.5 rounded-xl border border-gray-200 hover:border-dol-600 transition">
+                                    <label class="flex items-center gap-3 cursor-pointer shrink-0">
+                                        <input type="radio" name="service_type" value="อื่นๆ" id="radio-service-other">
+                                        <span class="scale-text">อื่นๆ (โปรดระบุ):</span>
+                                    </label>
+                                    <input type="text" id="service_other_detail" placeholder="ระบุประเภทงานบริการ..." 
+                                        onfocus="document.getElementById('radio-service-other').checked = true"
+                                        class="w-full border-b-2 border-gray-300 focus:border-dol-600 px-2 py-1 text-gray-800 focus:outline-none scale-text">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ส่วนที่ 2: ตารางประเมินความต้องการ -->
+                <section>
+                    <div class="flex items-center gap-2 bg-dol-50 border-l-4 border-dol-700 px-4 py-2.5 rounded-r-xl mb-3">
+                        <span class="bg-dol-700 text-white w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold">2</span>
+                        <h4 class="font-bold text-dol-800 scale-text-lg">ความต้องการในการพัฒนาปรับปรุงงานบริการ</h4>
+                    </div>
+                    <p class="text-gray-600 mb-4 scale-text-sm">
+                        <strong>5. ท่านต้องการให้สำนักงานที่ดินปรับปรุงพัฒนาในเรื่องใด</strong> โปรดเลือกระดับความต้องการในช่องตารางที่ตรงกับความเห็นของท่าน (หากหัวข้อ "อื่นๆ" ไม่ได้ระบุ สามารถเว้นว่างได้)
+                    </p>
+
+                    <div class="overflow-x-auto rounded-xl border border-gray-300 shadow-sm">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-dol-700 text-white">
+                                    <th class="py-3 px-3 text-center w-14 border-r border-dol-600">ลำดับ</th>
+                                    <th class="py-3 px-4 border-r border-dol-600">เรื่อง</th>
+                                    <th class="py-3 px-2 text-center w-20 sm:w-24 border-r border-dol-600">น้อย<br><span class="text-xs font-normal text-dol-200">(1)</span></th>
+                                    <th class="py-3 px-2 text-center w-20 sm:w-24 border-r border-dol-600">มาก<br><span class="text-xs font-normal text-dol-200">(2)</span></th>
+                                    <th class="py-3 px-2 text-center w-20 sm:w-24">มากที่สุด<br><span class="text-xs font-normal text-dol-200">(3)</span></th>
+                                </tr>
+                            </thead>
+                            <tbody id="survey-matrix-body" class="divide-y divide-gray-200 bg-white">
+                                <!-- ตารางจะถูกสร้างอัตโนมัติด้วย JavaScript เพื่อให้ข้อมูลตรงกับระบบวิเคราะห์ผล 100% -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- ส่วนที่ 3: ข้อเสนอแนะเพิ่มเติม -->
+                <section>
+                    <div class="flex items-center gap-2 bg-dol-50 border-l-4 border-dol-700 px-4 py-2.5 rounded-r-xl mb-4">
+                        <span class="bg-dol-700 text-white w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold">3</span>
+                        <h4 class="font-bold text-dol-800 scale-text-lg">ข้อเสนอแนะสำหรับการพัฒนางานบริการ</h4>
+                    </div>
+
+                    <div class="bg-gray-50/70 p-5 rounded-xl border border-gray-200 space-y-4">
+                        <div>
+                            <label for="suggestion_category" class="block font-semibold text-gray-800 mb-2 scale-text">
+                                6.1 หมวดหมู่ของข้อเสนอแนะ (ช่วยให้เจ้าหน้าที่แยกวิเคราะห์ปัญหาได้ตรงจุด)
+                            </label>
+                            <select id="suggestion_category" class="w-full sm:w-2/3 bg-white border border-gray-300 rounded-xl px-4 py-2.5 text-gray-800 focus:outline-none focus:border-dol-600 scale-text">
+                                <option value="ไม่มีข้อเสนอแนะเพิ่มเติม">-- เลือกหมวดหมู่ (หากมีข้อเสนอแนะ) --</option>
+                                <option value="ด้านขั้นตอนและความรวดเร็วในการให้บริการ">ด้านขั้นตอนและความรวดเร็วในการให้บริการ</option>
+                                <option value="ด้านสถานที่ ห้องน้ำ และที่จอดรถ">ด้านสถานที่ ห้องน้ำ และที่จอดรถ</option>
+                                <option value="ด้านบุคลากรและการให้คำปรึกษา">ด้านบุคลากรและการให้คำปรึกษา</option>
+                                <option value="ด้านระบบออนไลน์ เทคโนโลยี และข้อมูลข่าวสาร">ด้านระบบออนไลน์ เทคโนโลยี และข้อมูลข่าวสาร</option>
+                                <option value="ด้านการเปิดบริการนอกเวลาราชการ">ด้านการเปิดบริการนอกเวลาราชการ</option>
+                                <option value="ด้านอื่นๆ">ด้านอื่นๆ</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="suggestion_text" class="block font-semibold text-gray-800 mb-2 scale-text">
+                                6.2 รายละเอียดข้อเสนอแนะสำหรับการพัฒนางานบริการ
+                            </label>
+                            <textarea id="suggestion_text" rows="4" 
+                                placeholder="พิมพ์ข้อเสนอแนะ ปัญหาที่พบ หรือสิ่งที่ต้องการให้สำนักงานที่ดินกรุงเทพมหานคร สาขาบางเขน ปรับปรุงพัฒนา..."
+                                class="w-full bg-white border border-gray-300 rounded-xl p-4 text-gray-800 focus:outline-none focus:border-dol-600 scale-text"></textarea>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ปุ่มส่งแบบสำรวจ -->
+                <div class="pt-4 flex flex-col sm:flex-row gap-4">
+                    <button type="submit" id="btn-submit-survey" class="flex-1 bg-dol-700 hover:bg-dol-800 text-white font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition flex items-center justify-center gap-2 text-lg">
+                        <i class="fa-solid fa-paper-plane"></i>
+                        <span>บันทึกและส่งแบบสำรวจความต้องการ</span>
+                    </button>
+                    <button type="button" onclick="resetSurveyForm()" class="py-4 px-6 rounded-xl border border-gray-300 text-gray-600 font-semibold hover:bg-gray-100 transition">
+                        ล้างข้อมูลฟอร์ม
+                    </button>
+                </div>
+            </form>
+
+            <!-- ท้ายแบบฟอร์ม -->
+            <div class="bg-dol-50 border-t border-dol-200 p-5 text-center text-dol-800 font-semibold relative">
+                <i class="fa-solid fa-heart text-dol-600 mr-1"></i>
+                สำนักงานที่ดินกรุงเทพมหานคร สาขาบางเขน ขอขอบพระคุณที่ท่านตอบแบบสำรวจความต้องการของผู้รับบริการ
+                <div class="mt-2">
+                    <button type="button" onclick="openAdminModal()" class="text-[11px] font-normal text-dol-700/50 hover:text-dol-800 transition inline-flex items-center gap-1">
+                        <i class="fa-solid fa-lock text-[10px]"></i> เข้าสู่ระบบเจ้าหน้าที่
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- ========================================================================= -->
+    <!-- แท็บที่ 2: ระบบจัดการและสรุปผลข้อมูลรายเดือน (สำหรับเจ้าหน้าที่)              -->
+    <!-- ========================================================================= -->
+    <main id="tab-admin" class="tab-content hidden flex-grow max-w-7xl w-full mx-auto px-4 py-6 space-y-6">
+        
+        <!-- หัวกระดาษรายงานทางการ (แสดงเฉพาะตอนสั่งพิมพ์ / Print) -->
+        <div class="hidden print-only border-b-2 border-dol-800 pb-4 mb-6 text-center">
+            <div class="text-sm font-semibold text-dol-800">กรมที่ดิน กระทรวงมหาดไทย</div>
+            <h1 class="text-xl font-bold text-gray-900 mt-1">รายงานสรุปผลการสำรวจความต้องการของผู้รับบริการ</h1>
+            <h2 class="text-base font-semibold text-gray-800">สำนักงานที่ดินกรุงเทพมหานคร สาขาบางเขน</h2>
+            <div class="flex justify-center gap-6 text-xs text-gray-600 mt-2">
+                <span id="print-period-text">ประจำเดือน: ทั้งหมด</span>
+                <span>•</span>
+                <span id="print-service-text">ประเภทงาน: ทุกประเภทงานบริการ</span>
+                <span>•</span>
+                <span id="print-date-text">วันที่พิมพ์รายงาน: -</span>
+            </div>
+        </div>
+
+        <!-- แถบควบคุมด้านบน (Filter & Data Management) -->
+        <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-200 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 no-print">
+            <div>
+                <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+                    <i class="fa-solid fa-chart-column text-dol-700"></i>
+                    <span>ระบบจัดเก็บและวิเคราะห์ข้อมูลความต้องการรายเดือน</span>
+                </h2>
+                <p class="text-sm text-gray-500">สำนักงานที่ดินกรุงเทพมหานคร สาขาบางเขน • แยกข้อมูลตามเดือน ปี และประเภทงานบริการ</p>
+            </div>
+
+            <!-- ตัวกรองเดือนและประเภทงาน -->
+            <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+                <div class="flex items-center gap-2 bg-dol-50 px-3 py-2 rounded-xl border border-dol-200 flex-1 sm:flex-initial">
+                    <i class="fa-solid fa-calendar-days text-dol-700"></i>
+                    <select id="filter-month" onchange="renderDashboard()" class="bg-transparent font-semibold text-dol-800 text-sm focus:outline-none w-full">
+                        <option value="ALL">ทุกเดือน (ข้อมูลสะสมทั้งหมด)</option>
+                    </select>
+                </div>
+
+                <div class="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-xl border border-gray-200 flex-1 sm:flex-initial">
+                    <i class="fa-solid fa-filter text-gray-500"></i>
+                    <select id="filter-service" onchange="renderDashboard()" class="bg-transparent font-medium text-gray-700 text-sm focus:outline-none w-full">
+                        <option value="ALL">ทุกประเภทงานบริการ</option>
+                        <option value="จดทะเบียน (ขาย ให้ จำนอง มรดก ใบแทน)">งานจดทะเบียน</option>
+                        <option value="รังวัดที่ดิน">งานรังวัดที่ดิน</option>
+                        <option value="อื่นๆ">งานอื่นๆ</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- แถบเครื่องมือจัดการฐานข้อมูล (Backup / Restore / Mock / Export) -->
+        <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-200 flex flex-wrap items-center justify-between gap-3 no-print">
+            <div class="flex flex-wrap items-center gap-2">
+                <button onclick="generateMockData()" class="px-3.5 py-2 rounded-xl bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100 text-sm font-semibold flex items-center gap-2 transition">
+        <!-- แถบเครื่องมือจัดการฐานข้อมูล (Backup / Restore / Export) -->
+        <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-200 flex flex-wrap items-center justify-between gap-3 no-print">
+            <div class="flex flex-wrap items-center gap-2">
+                <button onclick="exportToCSV()" class="px-3.5 py-2 rounded-xl bg-dol-700 text-white hover:bg-dol-800 text-sm font-semibold flex items-center gap-2 shadow-sm transition">
+                    <i class="fa-solid fa-file-excel"></i>
+                    <span>ส่งออก Excel / CSV (ตามเดือนที่เลือก)</span>
+                </button>
+                <button onclick="printMonthlyReport()" class="px-3.5 py-2 rounded-xl bg-blue-600 text-white hover:bg-blue-700 text-sm font-semibold flex items-center gap-2 shadow-sm transition">
+                    <i class="fa-solid fa-print"></i>
+                    <span>พิมพ์รายงานประจำเดือน (PDF / กระดาษ)</span>
+                </button>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2">
+                <button onclick="openChangePassModal()" class="px-3 py-2 rounded-xl bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200 text-xs font-semibold flex items-center gap-1.5 transition" title="เปลี่ยนรหัสผ่านเข้าสู่ระบบเจ้าหน้าที่">
+                    <i class="fa-solid fa-key"></i>
+                    <span>เปลี่ยนรหัสผ่าน</span>
+                </button>
+                <button onclick="backupJSON()" class="px-3 py-2 rounded-xl bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 text-xs font-semibold flex items-center gap-1.5 transition" title="สำรองฐานข้อมูลเก็บไว้ในเครื่อง">
+                    <i class="fa-solid fa-download"></i>
+                    <span>สำรองข้อมูล (JSON)</span>
+                </button>
+                <label class="px-3 py-2 rounded-xl bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition" title="นำเข้าไฟล์สำรองข้อมูล">
+                    <i class="fa-solid fa-upload"></i>
+                    <span>กู้คืนข้อมูล</span>
+                    <input type="file" id="restore-file" accept=".json" onchange="restoreJSON(event)" class="hidden">
+                </label>
+                <button onclick="confirmClearAllData()" class="px-3 py-2 rounded-xl bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 text-xs font-semibold flex items-center gap-1.5 transition">
+                    <i class="fa-solid fa-trash-can"></i>
+                    <span>ล้างข้อมูล</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- การ์ดสรุปตัวเลขสำคัญ (KPI Cards) -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-200 border-l-4 border-l-dol-700">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-xs font-semibold text-gray-500 uppercase">ผู้ตอบแบบสำรวจทั้งหมด</p>
+                        <h3 id="kpi-total" class="text-3xl font-bold text-gray-800 mt-1">0</h3>
+                        <p id="kpi-period-label" class="text-xs text-dol-600 mt-1 font-medium">ช่วงเวลา: ทั้งหมด</p>
+                    </div>
+                    <div class="w-11 h-11 rounded-xl bg-dol-50 text-dol-700 flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-users"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-200 border-l-4 border-l-blue-600">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-xs font-semibold text-gray-500 uppercase">ประเภทงานที่มาติดต่อสูงสุด</p>
+                        <h3 id="kpi-top-service" class="text-lg font-bold text-gray-800 mt-1 line-clamp-1">-</h3>
+                        <p id="kpi-top-service-pct" class="text-xs text-blue-600 mt-1 font-medium">0% ของผู้รับบริการ</p>
+                    </div>
+                    <div class="w-11 h-11 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl shrink-0">
+                        <i class="fa-solid fa-briefcase"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-200 border-l-4 border-l-amber-500">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-xs font-semibold text-gray-500 uppercase">ต้องการปรับปรุง "มากที่สุด" อันดับ 1</p>
+                        <h3 id="kpi-top-need" class="text-base font-bold text-gray-800 mt-1 line-clamp-2 leading-snug">-</h3>
+                        <p id="kpi-top-need-count" class="text-xs text-amber-600 mt-1 font-medium">เลือกมากที่สุด 0 คน</p>
+                    </div>
+                    <div class="w-11 h-11 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl shrink-0">
+                        <i class="fa-solid fa-star"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-200 border-l-4 border-l-purple-600">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-xs font-semibold text-gray-500 uppercase">ข้อเสนอแนะในรอบเดือน</p>
+                        <h3 id="kpi-suggestions" class="text-3xl font-bold text-gray-800 mt-1">0</h3>
+                        <p class="text-xs text-purple-600 mt-1 font-medium">รายการความคิดเห็นเพิ่มเติม</p>
+                    </div>
+                    <div class="w-11 h-11 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-comments"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ส่วนที่ 1 ของรายงาน: กราฟแนวโน้มรายเดือน & ข้อมูลทั่วไปของผู้รับบริการ -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- กราฟเปรียบเทียบจำนวนผู้ตอบแยกตามเดือน -->
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-200 lg:col-span-2">
+                <h3 class="font-bold text-gray-800 mb-1 flex items-center gap-2">
+                    <i class="fa-solid fa-chart-line text-dol-700"></i>
+                    <span>สถิติจำนวนผู้ตอบแบบสำรวจแยกตามรายเดือนและประเภทงาน</span>
+                </h3>
+                <p class="text-xs text-gray-500 mb-4">เปรียบเทียบปริมาณผู้มาใช้บริการและตอบแบบสำรวจในแต่ละเดือน</p>
+                <div class="h-64">
+                    <canvas id="monthlyTrendChart"></canvas>
+                </div>
+            </div>
+
+            <!-- กราฟสัดส่วนประเภทงาน -->
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-200">
+                <h3 class="font-bold text-gray-800 mb-1 flex items-center gap-2">
+                    <i class="fa-solid fa-chart-pie text-blue-600"></i>
+                    <span>สัดส่วนประเภทงานที่รับบริการ</span>
+                </h3>
+                <p class="text-xs text-gray-500 mb-4">จำแนกตามกลุ่มงานหลักของสำนักงานที่ดิน</p>
+                <div class="h-64 flex items-center justify-center">
+                    <canvas id="servicePieChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- รายละเอียดข้อมูลประชากรศาสตร์ (เพศ, อายุ, ข้อจำกัด) -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-200">
+                <h4 class="font-bold text-gray-800 mb-3 text-sm border-b pb-2">1. จำแนกตามเพศ</h4>
+                <div id="demo-gender" class="space-y-3"></div>
+            </div>
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-200">
+                <h4 class="font-bold text-gray-800 mb-3 text-sm border-b pb-2">2. จำแนกตามช่วงอายุ</h4>
+                <div id="demo-age" class="space-y-3"></div>
+            </div>
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-200">
+                <h4 class="font-bold text-gray-800 mb-3 text-sm border-b pb-2">3. จำแนกตามข้อจำกัดของผู้รับบริการ</h4>
+                <div id="demo-limitation" class="space-y-3"></div>
+            </div>
+        </div>
+
+        <!-- ส่วนที่ 2 ของรายงาน: วิเคราะห์ความต้องการพัฒนาปรับปรุงแยกตาม 6 ด้าน -->
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-5 border-b pb-4">
+                <div>
+                    <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+                        <i class="fa-solid fa-list-check text-dol-700"></i>
+                        <span>ผลการวิเคราะห์ความต้องการพัฒนาปรับปรุง แยกตาม 6 ด้าน</span>
+                    </h3>
+                    <p class="text-xs text-gray-500 mt-0.5">แสดงจำนวนผู้ประเมินในแต่ละระดับ (น้อย / มาก / มากที่สุด) และค่าเฉลี่ยความต้องการ (เต็ม 3.00)</p>
+                </div>
+                <div class="flex items-center gap-3 text-xs">
+                    <span class="flex items-center gap-1"><span class="w-3 h-3 rounded-sm bg-gray-300 inline-block"></span> น้อย (1)</span>
+                    <span class="flex items-center gap-1"><span class="w-3 h-3 rounded-sm bg-amber-400 inline-block"></span> มาก (2)</span>
+                    <span class="flex items-center gap-1"><span class="w-3 h-3 rounded-sm bg-dol-600 inline-block"></span> มากที่สุด (3)</span>
+                </div>
+            </div>
+
+            <div id="analysis-6-categories" class="space-y-6">
+                <!-- แสดงผลแต่ละด้านแบบละเอียดด้วย JS -->
+            </div>
+        </div>
+
+        <!-- ส่วนที่ 3 ของรายงาน: ข้อเสนอแนะรายเดือน และ บันทึกข้อความ "อื่นๆ" -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- รายการข้อเสนอแนะ -->
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 lg:col-span-2">
+                <div class="flex flex-wrap justify-between items-center gap-2 mb-4 border-b pb-3">
+                    <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+                        <i class="fa-solid fa-comment-dots text-purple-600"></i>
+                        <span>ข้อเสนอแนะสำหรับการพัฒนางานบริการ</span>
+                    </h3>
+                    <select id="filter-suggestion-cat" onchange="renderSuggestionsOnly()" class="text-xs bg-gray-50 border border-gray-300 rounded-lg px-2.5 py-1.5 font-medium text-gray-700">
+                        <option value="ALL">ทุกหมวดหมู่ข้อเสนอแนะ</option>
+                        <option value="ด้านขั้นตอนและความรวดเร็วในการให้บริการ">ด้านขั้นตอนและความรวดเร็ว</option>
+                        <option value="ด้านสถานที่ ห้องน้ำ และที่จอดรถ">ด้านสถานที่ ห้องน้ำ และที่จอดรถ</option>
+                        <option value="ด้านบุคลากรและการให้คำปรึกษา">ด้านบุคลากรและการให้คำปรึกษา</option>
+                        <option value="ด้านระบบออนไลน์ เทคโนโลยี และข้อมูลข่าวสาร">ด้านระบบออนไลน์/เทคโนโลยี</option>
+                        <option value="ด้านการเปิดบริการนอกเวลาราชการ">ด้านเปิดบริการนอกเวลาราชการ</option>
+                        <option value="ด้านอื่นๆ">ด้านอื่นๆ</option>
+                    </select>
+                </div>
+
+                <div id="suggestions-list" class="space-y-3 max-h-[450px] overflow-y-auto pr-1">
+                    <!-- รายการข้อเสนอแนะ -->
+                </div>
+            </div>
+
+            <!-- สรุปรายละเอียดที่ผู้รับบริการระบุในช่อง "อื่นๆ (โปรดระบุ)" -->
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
+                <h3 class="text-base font-bold text-gray-800 mb-1 flex items-center gap-2">
+                    <i class="fa-solid fa-pen-to-square text-amber-600"></i>
+                    <span>สรุปรายการ "อื่นๆ (โปรดระบุ)"</span>
+                </h3>
+                <p class="text-xs text-gray-500 mb-4 border-b pb-3">ข้อความที่ผู้รับบริการพิมพ์ระบุเพิ่มเติมในหัวข้อย่อย</p>
+                <div id="other-inputs-list" class="space-y-3 max-h-[450px] overflow-y-auto pr-1">
+                    <!-- รายการอื่นๆ -->
+                </div>
+            </div>
+        </div>
+
+        <!-- ตารางข้อมูลดิบรายบุคคล (สามารถลบรายแถวได้) -->
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 no-print">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-base font-bold text-gray-800 flex items-center gap-2">
+                    <i class="fa-solid fa-table-list text-gray-600"></i>
+                    <span>รายการบันทึกข้อมูลแบบสำรวจ (เรียงจากล่าสุด)</span>
+                </h3>
+                <span id="table-count-badge" class="text-xs bg-dol-100 text-dol-800 font-bold px-3 py-1 rounded-full">0 รายการ</span>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse text-sm">
+                    <thead>
+                        <tr class="bg-gray-100 text-gray-700 border-b">
+                            <th class="py-2.5 px-3">วันที่รับบริการ</th>
+                            <th class="py-2.5 px-3">เดือน/ปี</th>
+                            <th class="py-2.5 px-3">เพศ / อายุ</th>
+                            <th class="py-2.5 px-3">ประเภทงาน</th>
+                            <th class="py-2.5 px-3">ข้อเสนอแนะ</th>
+                            <th class="py-2.5 px-3 text-center">จัดการ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="raw-data-tbody" class="divide-y divide-gray-200">
+                        <!-- แถวข้อมูล -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ส่วนลงนามท้ายรายงาน (แสดงเฉพาะตอนสั่งพิมพ์ / Print) -->
+        <div class="hidden print-only pt-10 mt-8 border-t border-gray-300 print-break-inside-avoid">
+            <div class="grid grid-cols-2 gap-8 text-center text-sm text-gray-800">
+                <div>
+                    <p class="mb-10">ลงชื่อ ...................................................... ผู้จัดทำรายงาน</p>
+                    <p>( ...................................................... )</p>
+                    <p class="text-xs text-gray-600 mt-1">ตำแหน่ง ......................................................</p>
+                    <p class="text-xs text-gray-600">วันที่ ........ / ................ / ............</p>
+                </div>
+                <div>
+                    <p class="mb-10">ลงชื่อ ...................................................... ผู้ตรวจสอบ/รับทราบ</p>
+                    <p>( ...................................................... )</p>
+                    <p class="text-xs text-gray-600 mt-1">เจ้าพนักงานที่ดินกรุงเทพมหานคร สาขาบางเขน</p>
+                    <p class="text-xs text-gray-600">วันที่ ........ / ................ / ............</p>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- ========================================================================= -->
+    <!-- JAVASCRIPT LOGIC                                                          -->
+    <!-- ========================================================================= -->
+    <!-- JAVASCRIPT & CLOUD STORAGE (FIREBASE FIRESTORE) LOGIC                     -->
+    <!-- ========================================================================= -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, deleteDoc, onSnapshot, collection, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // -------------------------------------------------------------------------
+        // 1. โครงสร้างข้อคำถามมาตรฐานตามต้นฉบับของสำนักงานที่ดิน
+        // -------------------------------------------------------------------------
+        const SURVEY_SCHEMA = [
+            {
+                catId: 1,
+                catTitle: "ประเภทงานบริการที่ต้องการให้เกิดการพัฒนาปรับปรุง",
+                items: [
+                    { id: "q1_1", label: "งานด้านทะเบียน" },
+                    { id: "q1_2", label: "งานด้านรังวัดที่ดิน" },
+                    { id: "q1_3", label: "งานบริการอื่นๆ", hasOtherInput: true, otherPlaceholder: "โปรดระบุ..." }
+                ]
+            },
+            {
+                catId: 2,
+                catTitle: "ท่านต้องการให้เปิดบริการนอกเวลาราชการช่วงใด",
+                items: [
+                    { id: "q2_1", label: "วันจันทร์ - วันศุกร์ 08.00 - 08.29 น." },
+                    { id: "q2_2", label: "วันจันทร์ - วันศุกร์ 12.01 - 12.59 น." },
+                    { id: "q2_3", label: "วันจันทร์ - วันศุกร์ 16.31 - 17.00 น." },
+                    { id: "q2_4", label: "อื่นๆ", hasOtherInput: true, otherPlaceholder: "โปรดระบุ เช่น วันเสาร์..." }
+                ]
+            },
+            {
+                catId: 3,
+                catTitle: "ท่านต้องการให้ปรับปรุงสถานที่ให้บริการด้านใดเพื่ออำนวยในการให้บริการ",
+                items: [
+                    { id: "q3_1", label: "สถานที่จัดเตรียมเอกสาร/มุมเขียนหนังสือมอบอำนาจ" },
+                    { id: "q3_2", label: "ห้องน้ำบริการประชาชน" },
+                    { id: "q3_3", label: "พื้นที่ให้บริการ" },
+                    { id: "q3_4", label: "อื่นๆ", hasOtherInput: true, otherPlaceholder: "โปรดระบุ เช่น ที่จอดรถ..." }
+                ]
+            },
+            {
+                catId: 4,
+                catTitle: "ความสะดวกในการเข้าถึงจุดบริการ",
+                items: [
+                    { id: "q4_1", label: "ต้องการให้มีการประชาสัมพันธ์ลำดับขั้นตอน และกรอบระยะเวลาการบริการ" },
+                    { id: "q4_2", label: "มีเจ้าหน้าที่ให้คำปรึกษา คัดกรองเอกสาร" },
+                    { id: "q4_3", label: "เพิ่มช่องบริการ" },
+                    { id: "q4_4", label: "กำหนดผู้รับผิดชอบ และช่องทางติดต่ออย่างชัดเจน" },
+                    { id: "q4_5", label: "มีแบบฟอร์มการขอรับบริการต่างๆ ที่ง่าย และไม่ซับซ้อน" },
+                    { id: "q4_6", label: "อื่นๆ", hasOtherInput: true, otherPlaceholder: "โปรดระบุ..." }
+                ]
+            },
+            {
+                catId: 5,
+                catTitle: "สิ่งอำนวยความสะดวกที่สำคัญที่ต้องการ",
+                items: [
+                    { id: "q5_1", label: "มีคอมพิวเตอร์ให้บริการตรวจสอบข้อมูลที่ดิน" },
+                    { id: "q5_2", label: "มีบริการ Wi-Fi สำหรับประชาชน" },
+                    { id: "q5_3", label: "อื่นๆ", hasOtherInput: true, otherPlaceholder: "โปรดระบุ..." }
+                ]
+            },
+            {
+                catId: 6,
+                catTitle: "ท่านต้องการรับรู้ข้อมูลข่าวสารเกี่ยวกับที่ดินเรื่องใด",
+                items: [
+                    { id: "q6_1", label: "การคำนวณค่าใช้จ่ายในการโอนกรรมสิทธิ์" },
+                    { id: "q6_2", label: "ราคาประเมินที่ดิน/อาคารชุด" },
+                    { id: "q6_3", label: "ค่าใช้จ่ายในการรังวัดที่ดิน" },
+                    { id: "q6_4", label: "อื่นๆ", hasOtherInput: true, otherPlaceholder: "โปรดระบุ..." }
+                ]
+            }
+        ];
+
+        // ตั้งค่า Firebase & Cloud State
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'bangkhen-land-survey';
+        let db = null;
+        let auth = null;
+        let currentUser = null;
+        let isCloudReady = false;
+
+        let surveyRecords = []; // เก็บข้อมูลแบบ Real-time จาก Cloud
+        let currentStaffPassword = '@bangkhen';
+        let isAdminAuthenticated = false;
+        let trendChartInstance = null;
+        let servicePieChartInstance = null;
+
+            async function initCloudStorage() {
+            const statusBadge = document.getElementById('cloud-status-badge');
+            try {
+                const firebaseConfig = {
+                    apiKey: "AIzaSyC2YK08GiPweVPPYsKqbRm9KuuOtOtP4R2k",
+                    authDomain: "://firebaseapp.com",
+                    projectId: "chat-53d85",
+                    storageBucket: "chat-53d85.firebasestorage.app",
+                    messagingSenderId: "411984306098",
+                    appId: "1:411984306098:web:bb235565e8794175984eab",
+                    measurementId: "G-7CJ99JE20X"
+                };
+
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                const cred = await signInAnonymously(auth);
+                currentUser = cred.user;
+
+                if (!currentUser) return;
+                isCloudReady = true;
+
+                statusBadge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> ฐานข้อมูลออนไลน์ (Real-time)`;
+
+                // 1. ซิงก์รหัสผ่านเจ้าหน้าที่จาก Cloud
+                const configDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'staff_config');
+                onSnapshot(configDocRef, (snap) => {
+                    if (snap.exists() && snap.data().password) {
+                        currentStaffPassword = snap.data().password;
+                    }
+                }, (err) => {
+                    console.error('Config sync error:', err);
+                });
+
+                // 2. ซิงก์ข้อมูลแบบสำรวจทั้งหมดแบบ Real-time
+                const surveysColRef = collection(db, 'artifacts', appId, 'public', 'data', 'surveys');
+                onSnapshot(surveysColRef, (snapshot) => {
+                    const loaded = [];
+                    snapshot.forEach(docSnap => {
+                        loaded.push({ id: docSnap.id, ...docSnap.data() });
+                    });
+                    loaded.sort((a, b) => (a.submittedAt || '').localeCompare(b.submittedAt || ''));
+                    surveyRecords = loaded;
+
+                    if (isAdminAuthenticated) {
+                        populateMonthFilter();
+                        renderDashboard();
+                    }
+                }, (error) => {
+                    console.error('Survey snapshot error:', error);
+                    showToast('เกิดข้อผิดพลาดในการซิงก์ข้อมูลออนไลน์', 'error');
+                });
+
+            } catch (err) {
+                console.error('Cloud init failed:', err);
+                statusBadge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-red-400"></span> โหมดออฟไลน์`;
+            }
+        }
+
+
+        function getStaffPassword() {
+            return currentStaffPassword || '@bangkhen';
+        }
+
+        // -------------------------------------------------------------------------
+        // ระบบยืนยันตัวตนและเปลี่ยนรหัสผ่านเจ้าหน้าที่
+        // -------------------------------------------------------------------------
+        function openAdminModal() {
+            if (isAdminAuthenticated) {
+                switchTab('admin');
+            } else {
+                document.getElementById('pin-modal').classList.remove('hidden');
+                document.getElementById('pin-modal').classList.add('flex');
+                document.getElementById('admin-pin-input').value = '';
+                document.getElementById('admin-pin-input').focus();
+            }
+        }
+
+        function closePinModal() {
+            document.getElementById('pin-modal').classList.add('hidden');
+            document.getElementById('pin-modal').classList.remove('flex');
+        }
+
+        function verifyAdminPin() {
+            const input = document.getElementById('admin-pin-input').value;
+            if (input === getStaffPassword()) {
+                isAdminAuthenticated = true;
+                closePinModal();
+                switchTab('admin');
+                showToast('เข้าสู่ระบบเจ้าหน้าที่เรียบร้อยแล้ว', 'success');
+            } else {
+                showToast('รหัสผ่านไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง', 'error');
+                document.getElementById('admin-pin-input').value = '';
+                document.getElementById('admin-pin-input').focus();
+            }
+        }
+
+        function logoutAdmin() {
+            isAdminAuthenticated = false;
+            switchTab('survey');
+            showToast('ออกจากระบบเจ้าหน้าที่แล้ว', 'info');
+        }
+
+        function openChangePassModal() {
+            document.getElementById('old-pass-input').value = '';
+            document.getElementById('new-pass-input').value = '';
+            document.getElementById('confirm-new-pass-input').value = '';
+            document.getElementById('change-pass-modal').classList.remove('hidden');
+            document.getElementById('change-pass-modal').classList.add('flex');
+        }
+
+        function closeChangePassModal() {
+            document.getElementById('change-pass-modal').classList.add('hidden');
+            document.getElementById('change-pass-modal').classList.remove('flex');
+        }
+
+        async function saveNewPassword() {
+            const oldPass = document.getElementById('old-pass-input').value;
+            const newPass = document.getElementById('new-pass-input').value.trim();
+            const confirmPass = document.getElementById('confirm-new-pass-input').value.trim();
+
+            if (oldPass !== getStaffPassword()) {
+                showToast('รหัสผ่านปัจจุบันไม่ถูกต้อง', 'error');
+                return;
+            }
+            if (newPass.length < 4) {
+                showToast('รหัสผ่านใหม่ต้องมีอย่างน้อย 4 ตัวอักษร', 'error');
+                return;
+            }
+            if (newPass !== confirmPass) {
+                showToast('ยืนยันรหัสผ่านใหม่ไม่ตรงกัน', 'error');
+                return;
+            }
+
+            if (isCloudReady && currentUser) {
+                try {
+                    const configDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'staff_config');
+                    await setDoc(configDocRef, { password: newPass, updatedAt: new Date().toISOString() }, { merge: true });
+                    currentStaffPassword = newPass;
+                    closeChangePassModal();
+                    showToast('บันทึกรหัสผ่านใหม่ลงฐานข้อมูลออนไลน์แล้ว', 'success');
+                } catch (e) {
+                    showToast('ไม่สามารถบันทึกรหัสผ่านได้ กรุณาลองใหม่', 'error');
+                }
+            }
+        }
+
+        function switchTab(tab) {
+            const surveyTab = document.getElementById('tab-survey');
+            const adminTab = document.getElementById('tab-admin');
+            const btnLogin = document.getElementById('btn-staff-login');
+            const btnLogout = document.getElementById('btn-staff-logout');
+
+            if (tab === 'admin') {
+                surveyTab.classList.add('hidden');
+                adminTab.classList.remove('hidden');
+                btnLogin.classList.add('hidden');
+                btnLogout.classList.remove('hidden');
+                populateMonthFilter();
+                renderDashboard();
+            } else {
+                adminTab.classList.add('hidden');
+                surveyTab.classList.remove('hidden');
+                btnLogin.classList.remove('hidden');
+                btnLogout.classList.add('hidden');
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // -------------------------------------------------------------------------
+        // 2. การจัดการหน้าแบบสำรวจ (Form Rendering & Cloud Submission)
+        // -------------------------------------------------------------------------
+        function initSurveyForm() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('survey-date').value = today;
+
+            const tbody = document.getElementById('survey-matrix-body');
+            let html = '';
+
+            SURVEY_SCHEMA.forEach(cat => {
+                html += `
+                    <tr class="bg-dol-50/90">
+                        <td class="py-2.5 px-3 text-center font-bold text-dol-800 border-r border-gray-200">${cat.catId}</td>
+                        <td colspan="4" class="py-2.5 px-4 font-bold text-dol-800 scale-text">${cat.catTitle}</td>
+                    </tr>
+                `;
+
+                cat.items.forEach(item => {
+                    const otherInputHtml = item.hasOtherInput 
+                        ? `<input type="text" id="${item.id}_text" placeholder="${item.otherPlaceholder}" 
+                            class="mt-1 sm:mt-0 sm:ml-2 w-full sm:w-64 border-b border-gray-300 focus:border-dol-600 px-2 py-0.5 text-sm text-gray-800 focus:outline-none bg-transparent">`
+                        : '';
+
+                    html += `
+                        <tr class="hover:bg-gray-50 transition">
+                            <td class="py-3 px-3 border-r border-gray-200"></td>
+                            <td class="py-3 px-4 border-r border-gray-200 text-gray-700 scale-text">
+                                <div class="flex flex-col sm:flex-row sm:items-center">
+                                    <span>- ${item.label}</span>
+                                    ${otherInputHtml}
+                                </div>
+                            </td>
+                            <td class="py-3 px-2 text-center border-r border-gray-200">
+                                <input type="radio" name="${item.id}" value="1" aria-label="${item.label} น้อย">
+                            </td>
+                            <td class="py-3 px-2 text-center border-r border-gray-200">
+                                <input type="radio" name="${item.id}" value="2" aria-label="${item.label} มาก">
+                            </td>
+                            <td class="py-3 px-2 text-center">
+                                <input type="radio" name="${item.id}" value="3" aria-label="${item.label} มากที่สุด">
+                            </td>
+                        </tr>
+                    `;
+                });
+            });
+
+            tbody.innerHTML = html;
+        }
+
+        function setFontSize(scale, btn) {
+            document.documentElement.style.setProperty('--font-scale', scale);
+            document.querySelectorAll('.font-btn').forEach(b => {
+                b.classList.remove('bg-dol-700', 'text-white', 'active');
+                b.classList.add('bg-white', 'text-dol-700');
+            });
+            btn.classList.remove('bg-white', 'text-dol-700');
+            btn.classList.add('bg-dol-700', 'text-white', 'active');
+        }
+
+        function resetSurveyForm() {
+            document.getElementById('surveyForm').reset();
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('survey-date').value = today;
+            showToast('ล้างข้อมูลในแบบฟอร์มเรียบร้อยแล้ว', 'info');
+        }
+
+        document.getElementById('surveyForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            if (!isCloudReady || !currentUser) {
+                showToast('ระบบกำลังเชื่อมต่อฐานข้อมูลออนไลน์ กรุณารอสักครู่แล้วกดส่งอีกครั้ง', 'error');
+                return;
+            }
+
+            const submitBtn = document.getElementById('btn-submit-survey');
+            const originalBtnHtml = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> <span>กำลังบันทึกข้อมูลขึ้นระบบออนไลน์...</span>`;
+
+            try {
+                const serviceDate = document.getElementById('survey-date').value || new Date().toISOString().split('T')[0];
+                const monthKey = serviceDate.substring(0, 7);
+
+                const gender = document.querySelector('input[name="gender"]:checked')?.value || '';
+                const age = document.querySelector('input[name="age"]:checked')?.value || '';
+                const limitation = document.querySelector('input[name="limitation"]:checked')?.value || '';
+                const serviceType = document.querySelector('input[name="service_type"]:checked')?.value || '';
+                const serviceOtherDetail = document.getElementById('service_other_detail').value.trim();
+
+                const ratings = {};
+                const otherTexts = {};
+
+                SURVEY_SCHEMA.forEach(cat => {
+                    cat.items.forEach(item => {
+                        const checked = document.querySelector(`input[name="${item.id}"]:checked`);
+                        ratings[item.id] = checked ? parseInt(checked.value) : null;
+                        if (item.hasOtherInput) {
+                            const txt = document.getElementById(`${item.id}_text`).value.trim();
+                            if (txt) otherTexts[item.id] = txt;
+                        }
+                    });
+                });
+
+                const suggestionCategory = document.getElementById('suggestion_category').value;
+                const suggestionText = document.getElementById('suggestion_text').value.trim();
+                const docId = 'SRV-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
+
+                const record = {
+                    id: docId,
+                    submittedAt: new Date().toISOString(),
+                    serviceDate: serviceDate,
+                    monthKey: monthKey,
+                    gender,
+                    age,
+                    limitation,
+                    serviceType,
+                    serviceOtherDetail,
+                    ratings,
+                    otherTexts,
+                    suggestionCategory: suggestionText && suggestionCategory === 'ไม่มีข้อเสนอแนะเพิ่มเติม' ? 'ด้านอื่นๆ' : suggestionCategory,
+                    suggestionText
+                };
+
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'surveys', docId);
+                await setDoc(docRef, record);
+
+                showToast('บันทึกแบบสำรวจขึ้นฐานข้อมูลออนไลน์เรียบร้อยแล้ว ขอบพระคุณครับ', 'success');
+                this.reset();
+                document.getElementById('survey-date').value = serviceDate;
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } catch (err) {
+                console.error('Save error:', err);
+                showToast('เกิดข้อผิดพลาดในการบันทึกข้อมูล กรุณาลองใหม่อีกครั้ง', 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalBtnHtml;
+            }
+        });
+
+        // -------------------------------------------------------------------------
+        // 3. การจัดการฐานข้อมูลออนไลน์ & ข้อมูลตัวอย่าง 3 เดือน
+        // -------------------------------------------------------------------------
+        function getSurveyData() {
+            return surveyRecords;
+        }
+
+        function formatThaiMonth(yyyyMm) {
+            if (!yyyyMm || yyyyMm === 'ALL') return 'ทุกเดือน (สะสมทั้งหมด)';
+            const [year, month] = yyyyMm.split('-');
+            const thaiMonths = [
+                'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+                'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
+            ];
+            const mIdx = parseInt(month, 10) - 1;
+            const thaiYear = parseInt(year, 10) + 543;
+            return `${thaiMonths[mIdx] || month} ${thaiYear}`;
+        }
+
+        function populateMonthFilter() {
+            const data = getSurveyData();
+            const select = document.getElementById('filter-month');
+            const currentVal = select.value;
+
+            const months = [...new Set(data.map(d => d.monthKey))].sort().reverse();
+            let optionsHtml = `<option value="ALL">ทุกเดือน (ข้อมูลสะสมทั้งหมด ${data.length} รายการ)</option>`;
+            
+            months.forEach(m => {
+                const count = data.filter(d => d.monthKey === m).length;
+                optionsHtml += `<option value="${m}">เดือน ${formatThaiMonth(m)} (${count} รายการ)</option>`;
+            });
+
+            select.innerHTML = optionsHtml;
+            if (months.includes(currentVal)) {
+                select.value = currentVal;
+            }
+        }
+
+        // -------------------------------------------------------------------------
+        // 4. การแสดงผล Dashboard และวิเคราะห์ข้อมูลรายเดือน
+        // -------------------------------------------------------------------------
+        function getFilteredData() {
+            const all = getSurveyData();
+            const monthVal = document.getElementById('filter-month').value;
+            const serviceVal = document.getElementById('filter-service').value;
+
+            return all.filter(item => {
+                const matchMonth = (monthVal === 'ALL' || item.monthKey === monthVal);
+                const matchService = (serviceVal === 'ALL' || item.serviceType === serviceVal);
+                return matchMonth && matchService;
+            });
+        }
+
+        function renderDashboard() {
+            const allData = getSurveyData();
+            const filtered = getFilteredData();
+            const monthVal = document.getElementById('filter-month').value;
+
+            // 1. อัปเดต KPI Cards
+            document.getElementById('kpi-total').textContent = filtered.length.toLocaleString();
+            document.getElementById('kpi-period-label').textContent = `ช่วงเวลา: ${formatThaiMonth(monthVal)}`;
+
+            // ประเภทงานสูงสุด
+            const serviceCounts = {};
+            filtered.forEach(d => {
+                const key = d.serviceType || 'ไม่ระบุ';
+                serviceCounts[key] = (serviceCounts[key] || 0) + 1;
+            });
+            const topSrv = Object.entries(serviceCounts).sort((a, b) => b[1] - a[1])[0];
+            if (topSrv && filtered.length > 0) {
+                const shortName = topSrv[0].startsWith('จดทะเบียน') ? 'งานจดทะเบียนสิทธิฯ' : topSrv[0];
+                const pct = ((topSrv[1] / filtered.length) * 100).toFixed(1);
+                document.getElementById('kpi-top-service').textContent = shortName;
+                document.getElementById('kpi-top-service-pct').textContent = `${topSrv[1]} คน (${pct}%)`;
+            } else {
+                document.getElementById('kpi-top-service').textContent = '-';
+                document.getElementById('kpi-top-service-pct').textContent = '0% ของผู้รับบริการ';
+            }
+
+            // หาหัวข้อที่คนเลือก "มากที่สุด" (3) อันดับ 1
+            let topNeedLabel = '-';
+            let topNeedCount = 0;
+            SURVEY_SCHEMA.forEach(cat => {
+                cat.items.forEach(item => {
+                    const count3 = filtered.filter(d => d.ratings && d.ratings[item.id] === 3).length;
+                    if (count3 > topNeedCount) {
+                        topNeedCount = count3;
+                        topNeedLabel = item.label;
+                    }
+                });
+            });
+            document.getElementById('kpi-top-need').textContent = topNeedLabel;
+            document.getElementById('kpi-top-need-count').textContent = `เลือก "มากที่สุด" ${topNeedCount} คน`;
+
+            // จำนวนข้อเสนอแนะ
+            const sugCount = filtered.filter(d => d.suggestionText && d.suggestionText.trim() !== '').length;
+            document.getElementById('kpi-suggestions').textContent = sugCount.toLocaleString();
+
+            // 2. วาดกราฟแนวโน้มรายเดือน (ใช้ข้อมูลทั้งหมดเพื่อเปรียบเทียบแต่ละเดือน)
+            renderMonthlyTrendChart(allData);
+
+            // 3. วาดกราฟวงกลมประเภทงาน (ตามตัวกรองเดือน)
+            renderServicePieChart(filtered);
+
+            // 4. แสดงผลข้อมูลทั่วไป (เพศ, อายุ, ข้อจำกัด)
+            renderDemographics(filtered);
+
+            // 5. วิเคราะห์ความต้องการแยกตาม 6 ด้าน
+            renderSixCategoriesAnalysis(filtered);
+
+            // 6. แสดงข้อเสนอแนะ & ข้อความ "อื่นๆ (โปรดระบุ)"
+            renderSuggestionsOnly();
+            renderOtherInputs(filtered);
+
+            // 7. แสดงตารางข้อมูลดิบ
+            renderRawTable(filtered);
+        }
+
+        function renderMonthlyTrendChart(allData) {
+            const ctx = document.getElementById('monthlyTrendChart').getContext('2d');
+            const months = [...new Set(allData.map(d => d.monthKey))].sort();
+            
+            const labels = months.map(m => formatThaiMonth(m));
+            const regCounts = months.map(m => allData.filter(d => d.monthKey === m && d.serviceType && d.serviceType.startsWith('จดทะเบียน')).length);
+            const surveyLandCounts = months.map(m => allData.filter(d => d.monthKey === m && d.serviceType === 'รังวัดที่ดิน').length);
+            const otherCounts = months.map(m => allData.filter(d => d.monthKey === m && d.serviceType === 'อื่นๆ').length);
+
+            if (trendChartInstance) trendChartInstance.destroy();
+
+            trendChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels.length ? labels : ['ยังไม่มีข้อมูล'],
+                    datasets: [
+                        { label: 'งานจดทะเบียน', data: regCounts, backgroundColor: '#1b5e20', borderRadius: 4 },
+                        { label: 'งานรังวัดที่ดิน', data: surveyLandCounts, backgroundColor: '#f57f17', borderRadius: 4 },
+                        { label: 'งานอื่นๆ', data: otherCounts, backgroundColor: '#0284c7', borderRadius: 4 }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom' } },
+                    scales: {
+                        x: { stacked: true },
+                        y: { stacked: true, beginAtZero: true, ticks: { stepSize: 1 } }
+                    }
+                }
+            });
+        }
+
+        function renderServicePieChart(filtered) {
+            const ctx = document.getElementById('servicePieChart').getContext('2d');
+            const reg = filtered.filter(d => d.serviceType && d.serviceType.startsWith('จดทะเบียน')).length;
+            const land = filtered.filter(d => d.serviceType === 'รังวัดที่ดิน').length;
+            const other = filtered.filter(d => d.serviceType === 'อื่นๆ').length;
+
+            if (servicePieChartInstance) servicePieChartInstance.destroy();
+
+            servicePieChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['งานจดทะเบียน', 'งานรังวัดที่ดิน', 'งานอื่นๆ'],
+                    datasets: [{
+                        data: (reg + land + other) > 0 ? [reg, land, other] : [0, 0, 0],
+                        backgroundColor: ['#1b5e20', '#f57f17', '#0284c7'],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom' } }
+                }
+            });
+        }
+
+        function renderDemographics(filtered) {
+            const total = filtered.length;
+
+            const buildBars = (options, field) => {
+                if (total === 0) return '<p class="text-xs text-gray-400 text-center py-4">ยังไม่มีข้อมูล</p>';
+                return options.map(opt => {
+                    const count = filtered.filter(d => d[field] === opt).length;
+                    const pct = ((count / total) * 100).toFixed(1);
+                    return `
+                        <div>
+                            <div class="flex justify-between text-xs mb-1">
+                                <span class="font-medium text-gray-700">${opt}</span>
+                                <span class="font-semibold text-dol-800">${count} คน (${pct}%)</span>
+                            </div>
+                            <div class="w-full bg-gray-100 rounded-full h-2">
+                                <div class="bg-dol-600 h-2 rounded-full transition-all duration-300" style="width: ${pct}%"></div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            };
+
+            document.getElementById('demo-gender').innerHTML = buildBars(['ชาย', 'หญิง'], 'gender');
+            document.getElementById('demo-age').innerHTML = buildBars(['ต่ำกว่า 20 ปี', '20 - 40 ปี', '41 - 60 ปี', 'มากกว่า 60 ปี'], 'age');
+            document.getElementById('demo-limitation').innerHTML = buildBars(['อื่นๆ / ทั่วไป', 'ผู้สูงอายุ', 'ผู้พิการ', 'ภิกษุ/สามเณร'], 'limitation');
+        }
+
+        function renderSixCategoriesAnalysis(filtered) {
+            const container = document.getElementById('analysis-6-categories');
+            if (filtered.length === 0) {
+                container.innerHTML = `<div class="text-center py-8 text-gray-400 bg-gray-50 rounded-xl border border-dashed">ไม่พบข้อมูลแบบสำรวจตามเงื่อนไขที่เลือก</div>`;
+                return;
+            }
+
+            let html = '';
+            SURVEY_SCHEMA.forEach(cat => {
+                html += `
+                    <div class="border border-gray-200 rounded-xl overflow-hidden print-break-inside-avoid">
+                        <div class="bg-dol-50 px-4 py-2.5 font-bold text-dol-800 text-sm border-b border-gray-200">
+                            ด้านที่ ${cat.catId}: ${cat.catTitle}
+                        </div>
+                        <div class="divide-y divide-gray-100">
+                `;
+
+                cat.items.forEach(item => {
+                    const c1 = filtered.filter(d => d.ratings && d.ratings[item.id] === 1).length;
+                    const c2 = filtered.filter(d => d.ratings && d.ratings[item.id] === 2).length;
+                    const c3 = filtered.filter(d => d.ratings && d.ratings[item.id] === 3).length;
+                    const answered = c1 + c2 + c3;
+
+                    const p1 = answered ? ((c1 / answered) * 100).toFixed(0) : 0;
+                    const p2 = answered ? ((c2 / answered) * 100).toFixed(0) : 0;
+                    const p3 = answered ? ((c3 / answered) * 100).toFixed(0) : 0;
+                    const avg = answered ? (((c1 * 1) + (c2 * 2) + (c3 * 3)) / answered).toFixed(2) : '0.00';
+
+                    html += `
+                        <div class="p-3.5 hover:bg-gray-50/70 transition">
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+                                <span class="text-sm font-medium text-gray-800">- ${item.label}</span>
+                                <div class="flex items-center gap-3 text-xs shrink-0">
+                                    <span class="text-gray-500">น้อย: <b>${c1}</b> (${p1}%)</span>
+                                    <span class="text-amber-700">มาก: <b>${c2}</b> (${p2}%)</span>
+                                    <span class="text-dol-700">มากที่สุด: <b>${c3}</b> (${p3}%)</span>
+                                    <span class="bg-dol-100 text-dol-900 font-bold px-2 py-0.5 rounded">เฉลี่ย ${avg}</span>
+                                </div>
+                            </div>
+                            <div class="w-full h-3 bg-gray-100 rounded-full overflow-hidden flex">
+                                ${answered > 0 ? `
+                                    <div style="width: ${p1}%" class="bg-gray-300 h-full" title="น้อย: ${c1} คน (${p1}%)"></div>
+                                    <div style="width: ${p2}%" class="bg-amber-400 h-full" title="มาก: ${c2} คน (${p2}%)"></div>
+                                    <div style="width: ${p3}%" class="bg-dol-600 h-full" title="มากที่สุด: ${c3} คน (${p3}%)"></div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    `;
+                });
+
+                html += `</div></div>`;
+            });
+
+            container.innerHTML = html;
+        }
+
+        function renderSuggestionsOnly() {
+            const filtered = getFilteredData();
+            const catFilter = document.getElementById('filter-suggestion-cat').value;
+            const listEl = document.getElementById('suggestions-list');
+
+            const items = filtered.filter(d => {
+                const hasText = d.suggestionText && d.suggestionText.trim() !== '';
+                const matchCat = (catFilter === 'ALL' || d.suggestionCategory === catFilter);
+                return hasText && matchCat;
+            }).reverse();
+
+            if (items.length === 0) {
+                listEl.innerHTML = `<div class="text-center py-8 text-gray-400 text-sm bg-gray-50 rounded-xl border border-dashed">ไม่มีข้อเสนอแนะในหมวดหมู่และช่วงเวลาที่เลือก</div>`;
+                return;
+            }
+
+            listEl.innerHTML = items.map(item => `
+                <div class="p-3.5 rounded-xl bg-gray-50 border border-gray-200 hover:border-purple-300 transition print-break-inside-avoid">
+                    <div class="flex flex-wrap justify-between items-center gap-2 mb-1.5">
+                        <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-800">
+                            ${escapeHtml(item.suggestionCategory || 'ข้อเสนอแนะทั่วไป')}
+                        </span>
+                        <span class="text-xs text-gray-500">
+                            <i class="fa-regular fa-calendar mr-1"></i>${item.serviceDate} • ${escapeHtml(item.serviceType || '')}
+                        </span>
+                    </div>
+                    <p class="text-sm text-gray-800 leading-relaxed">"${escapeHtml(item.suggestionText)}"</p>
+                </div>
+            `).join('');
+        }
+
+        function renderOtherInputs(filtered) {
+            const container = document.getElementById('other-inputs-list');
+            const notes = [];
+
+            filtered.forEach(d => {
+                if (d.serviceType === 'อื่นๆ' && d.serviceOtherDetail) {
+                    notes.push({
+                        topic: 'ข้อ 4. ประเภทงานที่รับบริการ (อื่นๆ)',
+                        text: d.serviceOtherDetail,
+                        date: d.serviceDate
+                    });
+                }
+                if (d.otherTexts) {
+                    Object.entries(d.otherTexts).forEach(([qId, txt]) => {
+                        if (txt && txt.trim() !== '') {
+                            let catName = qId;
+                            SURVEY_SCHEMA.forEach(c => {
+                                if (c.items.some(i => i.id === qId)) catName = `ด้านที่ ${c.catId}: ${c.catTitle}`;
+                            });
+                            notes.push({ topic: catName, text: txt, date: d.serviceDate });
+                        }
+                    });
+                }
+            });
+
+            if (notes.length === 0) {
+                container.innerHTML = `<div class="text-center py-8 text-gray-400 text-xs bg-gray-50 rounded-xl border border-dashed">ไม่มีข้อความระบุเพิ่มเติมในช่อง "อื่นๆ"</div>`;
+                return;
+            }
+
+            container.innerHTML = notes.reverse().map(n => `
+                <div class="p-3 rounded-xl bg-amber-50/60 border border-amber-200/80 text-xs print-break-inside-avoid">
+                    <div class="font-bold text-amber-900 mb-1">${escapeHtml(n.topic)}</div>
+                    <div class="text-gray-800 text-sm mb-1">- ${escapeHtml(n.text)}</div>
+                    <div class="text-gray-400 text-[11px]">วันที่: ${n.date}</div>
+                </div>
+            `).join('');
+        }
+
+        function renderRawTable(filtered) {
+            const tbody = document.getElementById('raw-data-tbody');
+            document.getElementById('table-count-badge').textContent = `${filtered.length} รายการ`;
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-gray-400">ไม่พบข้อมูลรายการ</td></tr>`;
+                return;
+            }
+
+            const sorted = [...filtered].reverse();
+            tbody.innerHTML = sorted.map(row => `
+                <tr class="hover:bg-gray-50">
+                    <td class="py-2.5 px-3 whitespace-nowrap">${row.serviceDate}</td>
+                    <td class="py-2.5 px-3 whitespace-nowrap text-dol-800 font-medium">${formatThaiMonth(row.monthKey)}</td>
+                    <td class="py-2.5 px-3 whitespace-nowrap">${escapeHtml(row.gender)} / ${escapeHtml(row.age)}</td>
+                    <td class="py-2.5 px-3">
+                        <span class="text-xs font-medium bg-gray-100 px-2 py-0.5 rounded">${escapeHtml(row.serviceType)}</span>
+                        ${row.serviceOtherDetail ? `<div class="text-xs text-gray-500 mt-0.5">(${escapeHtml(row.serviceOtherDetail)})</div>` : ''}
+                    </td>
+                    <td class="py-2.5 px-3 max-w-xs truncate text-gray-600" title="${escapeHtml(row.suggestionText || '-')}">
+                        ${row.suggestionText ? escapeHtml(row.suggestionText) : '<span class="text-gray-300">-</span>'}
+                    </td>
+                    <td class="py-2.5 px-3 text-center">
+                        <button onclick="deleteSingleRecord('${row.id}')" class="text-red-500 hover:text-red-700 p-1.5 rounded-lg hover:bg-red-50 transition" title="ลบรายการนี้">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // -------------------------------------------------------------------------
+        // 5. ส่งออกไฟล์ Excel (CSV), พิมพ์รายงาน และ สำรอง/กู้คืนข้อมูล
+        // -------------------------------------------------------------------------
+        function exportToCSV() {
+            const filtered = getFilteredData();
+            if (filtered.length === 0) {
+                showToast('ไม่มีข้อมูลสำหรับส่งออกในเดือนที่เลือก', 'error');
+                return;
+            }
+
+            const monthVal = document.getElementById('filter-month').value;
+            const questionCols = [];
+            SURVEY_SCHEMA.forEach(cat => {
+                cat.items.forEach(item => questionCols.push({ id: item.id, title: `${cat.catId}.${item.label}` }));
+            });
+
+            const headers = [
+                'รหัสรายการ', 'วันที่รับบริการ', 'เดือน/ปี', 'เพศ', 'อายุ', 'ข้อจำกัด',
+                'ประเภทงานที่รับบริการ', 'รายละเอียดงานอื่นๆ',
+                ...questionCols.map(q => q.title),
+                'หมวดหมู่ข้อเสนอแนะ', 'รายละเอียดข้อเสนอแนะ'
+            ];
+
+            const rows = filtered.map(r => {
+                const ratingVals = questionCols.map(q => {
+                    const val = r.ratings ? r.ratings[q.id] : '';
+                    const otherTxt = (r.otherTexts && r.otherTexts[q.id]) ? ` (${r.otherTexts[q.id]})` : '';
+                    if (val === 1) return `น้อย (1)${otherTxt}`;
+                    if (val === 2) return `มาก (2)${otherTxt}`;
+                    if (val === 3) return `มากที่สุด (3)${otherTxt}`;
+                    return otherTxt ? otherTxt.trim() : '';
+                });
+
+                return [
+                    r.id, r.serviceDate, formatThaiMonth(r.monthKey), r.gender, r.age, r.limitation,
+                    r.serviceType, r.serviceOtherDetail || '',
+                    ...ratingVals,
+                    r.suggestionCategory || '', r.suggestionText || ''
+                ].map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',');
+            });
+
+            const csvContent = '\uFEFF' + [headers.join(','), ...rows].join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `รายงานแบบสำรวจ_สนง_ที่ดิน_บางเขน_${monthVal}.csv`;
+            link.click();
+            showToast('ส่งออกไฟล์ Excel (CSV) เรียบร้อยแล้ว', 'success');
+        }
+
+        function printMonthlyReport() {
+            const monthVal = document.getElementById('filter-month').value;
+            const serviceSelect = document.getElementById('filter-service');
+            const serviceText = serviceSelect.options[serviceSelect.selectedIndex].text;
+            const nowStr = new Date().toLocaleDateString('th-TH', {
+                year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
+            });
+
+            document.getElementById('print-period-text').textContent = `ประจำเดือน: ${formatThaiMonth(monthVal)}`;
+            document.getElementById('print-service-text').textContent = `ประเภทงาน: ${serviceText}`;
+            document.getElementById('print-date-text').textContent = `วันที่พิมพ์รายงาน: ${nowStr} น.`;
+
+            window.print();
+        }
+
+        function backupJSON() {
+            const all = getSurveyData();
+            if (all.length === 0) {
+                showToast('ยังไม่มีข้อมูลในระบบให้สำรอง', 'error');
+                return;
+            }
+            const blob = new Blob([JSON.stringify(all, null, 2)], { type: 'application/json' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            const dateStr = new Date().toISOString().split('T')[0];
+            link.download = `backup_survey_bangkhen_${dateStr}.json`;
+            link.click();
+            showToast('ดาวน์โหลดไฟล์สำรองข้อมูล (JSON) เรียบร้อยแล้ว', 'success');
+        }
+
+        function restoreJSON(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            if (!isCloudReady || !currentUser) {
+                showToast('ยังไม่ได้เชื่อมต่อฐานข้อมูลออนไลน์', 'error');
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    if (Array.isArray(imported)) {
+                        showToast('กำลังอัปโหลดข้อมูลกู้คืนขึ้นฐานข้อมูลออนไลน์...', 'info');
+                        // แบ่งบันทึกทีละ 400 รายการตามข้อจำกัดของ Batch
+                        for (let i = 0; i < imported.length; i += 400) {
+                            const chunk = imported.slice(i, i + 400);
+                            const batch = writeBatch(db);
+                            chunk.forEach((item, idx) => {
+                                const docId = item.id || ('RESTORE-' + Date.now() + '-' + (i + idx));
+                                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'surveys', docId);
+                                batch.set(docRef, { ...item, id: docId });
+                            });
+                            await batch.commit();
+                        }
+                        showToast(`กู้คืนข้อมูลขึ้น Cloud สำเร็จ (${imported.length} รายการ)`, 'success');
+                    } else {
+                        showToast('รูปแบบไฟล์สำรองข้อมูลไม่ถูกต้อง', 'error');
+                    }
+                } catch (err) {
+                    console.error(err);
+                    showToast('ไม่สามารถนำเข้าไฟล์สำรองข้อมูลได้', 'error');
+                }
+                event.target.value = '';
+            };
+            reader.readAsText(file);
+        }
+
+        function deleteSingleRecord(id) {
+            openConfirmModal('ลบข้อมูลแบบสำรวจ', 'คุณต้องการลบข้อมูลรายการนี้ออกจากฐานข้อมูลออนไลน์ใช่หรือไม่?', async () => {
+                if (!isCloudReady || !currentUser) return;
+                try {
+                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'surveys', id));
+                    showToast('ลบข้อมูลรายการเรียบร้อยแล้ว', 'info');
+                } catch (err) {
+                    showToast('เกิดข้อผิดพลาดในการลบข้อมูล', 'error');
+                }
+            });
+        }
+
+        function confirmClearAllData() {
+            openConfirmModal('ล้างข้อมูลทั้งหมดในฐานข้อมูลออนไลน์', 'คำเตือน: ข้อมูลแบบสำรวจทั้งหมดบน Cloud จะถูกลบถาวร ควรสำรองข้อมูล (JSON) ก่อนดำเนินการ คุณแน่ใจหรือไม่?', async () => {
+                if (!isCloudReady || !currentUser) return;
+                try {
+                    showToast('กำลังลบข้อมูลทั้งหมด...', 'info');
+                    const all = getSurveyData();
+                    for (let i = 0; i < all.length; i += 400) {
+                        const chunk = all.slice(i, i + 400);
+                        const batch = writeBatch(db);
+                        chunk.forEach(item => {
+                            batch.delete(doc(db, 'artifacts', appId, 'public', 'data', 'surveys', item.id));
+                        });
+                        await batch.commit();
+                    }
+                    showToast('ล้างข้อมูลทั้งหมดเรียบร้อยแล้ว', 'info');
+                } catch (err) {
+                    showToast('เกิดข้อผิดพลาดในการล้างข้อมูล', 'error');
+                }
+            });
+        }
+
+        // -------------------------------------------------------------------------
+        // 6. Utilities (Toast Notification & Confirm Modal)
+        // -------------------------------------------------------------------------
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            const styles = {
+                success: 'bg-dol-800 text-white border-dol-600',
+                error: 'bg-red-600 text-white border-red-700',
+                info: 'bg-gray-800 text-white border-gray-700'
+            };
+            const icons = {
+                success: 'fa-circle-check',
+                error: 'fa-circle-xmark',
+                info: 'fa-circle-info'
+            };
+
+            toast.className = `${styles[type] || styles.info} border px-4 py-3 rounded-xl shadow-lg flex items-center gap-3 text-sm font-medium pointer-events-auto transition-all duration-300 transform translate-y-2 opacity-0`;
+            toast.innerHTML = `<i class="fa-solid ${icons[type] || icons.info} text-base shrink-0"></i><span>${escapeHtml(message)}</span>`;
+            
+            container.appendChild(toast);
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            });
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        let confirmCallback = null;
+        function openConfirmModal(title, message, onConfirm) {
+            document.getElementById('confirm-title').textContent = title;
+            document.getElementById('confirm-message').textContent = message;
+            confirmCallback = onConfirm;
+            const modal = document.getElementById('confirm-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeConfirmModal() {
+            const modal = document.getElementById('confirm-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            confirmCallback = null;
+        }
+
+        document.getElementById('confirm-ok-btn').addEventListener('click', () => {
+            if (confirmCallback) confirmCallback();
+            closeConfirmModal();
+        });
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // เปิดให้ฟังก์ชันเรียกใช้งานจากปุ่ม HTML onclick ได้ในโหมด type="module"
+        Object.assign(window, {
+            openAdminModal,
+            closePinModal,
+            verifyAdminPin,
+            logoutAdmin,
+            openChangePassModal,
+            closeChangePassModal,
+            saveNewPassword,
+            switchTab,
+            setFontSize,
+            resetSurveyForm,
+            exportToCSV,
+            printMonthlyReport,
+            backupJSON,
+            restoreJSON,
+            deleteSingleRecord,
+            confirmClearAllData,
+            renderDashboard,
+            renderSuggestionsOnly,
+            closeConfirmModal
+        });
+
+        // เริ่มต้นการทำงานเมื่อโหลดหน้าเว็บ
+        window.addEventListener('DOMContentLoaded', () => {
+            initSurveyForm();
+            initCloudStorage();
+        });
+    </script>
+</body>
+</html>
