@@ -4,20 +4,32 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ระบบแบบสำรวจความต้องการของผู้รับบริการ - สำนักงานที่ดินกรุงเทพมหานคร สาขาบางเขน</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Tailwind CSS -->
+    <script src="https://tailwindcss.com"></script>
+    <!-- Google Fonts: Sarabun & Inter -->
+    <link href="https://googleapis.com" rel="stylesheet">
+    <!-- Chart.js สำหรับสร้างกราฟวิเคราะห์ผล -->
+    <script src="https://jsdelivr.net"></script>
+    <!-- Font Awesome สำหรับไอคอน -->
+    <link rel="stylesheet" href="https://cloudflare.com">
+    
     <script>
         tailwind.config = {
             theme: {
                 extend: {
-                    fontFamily: { sans: ['Sarabun', 'Inter', 'sans-serif'] },
+                    fontFamily: {
+                        sans: ['Sarabun', 'Inter', 'sans-serif'],
+                    },
                     colors: {
                         dol: {
-                            50: '#f1f8e9', 100: '#dcedc8', 200: '#c5e1a5',
-                            600: '#2e7d32', 700: '#1b5e20', 800: '#144718',
-                            900: '#0d3311', gold: '#f57f17'
+                            50: '#f1f8e9',
+                            100: '#dcedc8',
+                            200: '#c5e1a5',
+                            600: '#2e7d32',
+                            700: '#1b5e20',
+                            800: '#144718',
+                            900: '#0d3311',
+                            gold: '#f57f17'
                         }
                     }
                 }
@@ -25,7 +37,9 @@
         }
     </script>
     <style>
-        :root { --font-scale: 1; }
+        :root {
+            --font-scale: 1;
+        }
         body {
             font-family: 'Sarabun', sans-serif;
             font-size: calc(16px * var(--font-scale));
@@ -34,19 +48,23 @@
         }
         .scale-text { font-size: calc(1rem * var(--font-scale)); }
         .scale-text-sm { font-size: calc(0.875rem * var(--font-scale)); }
+        .scale-text-lg { font-size: calc(1.125rem * var(--font-scale)); }
         input[type="radio"] {
             accent-color: #1b5e20;
-            width: calc(1.15rem * var(--font-scale));
-            height: calc(1.15rem * var(--font-scale));
+            width: calc(1.2rem * var(--font-scale));
+            height: calc(1.2rem * var(--font-scale));
             cursor: pointer;
         }
-        .tab-content { animation: fadeIn 0.3s ease-in-out; }
+        .tab-content {
+            animation: fadeIn 0.3s ease-in-out;
+        }
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(5px); }
             to { opacity: 1; transform: translateY(0); }
         }
         @media print {
             .no-print { display: none !important; }
+            .print-only { display: block !important; }
             body { background: white !important; color: black !important; font-size: 13pt; }
             .shadow-lg, .shadow-md, .shadow-sm { box-shadow: none !important; }
             #tab-admin { padding: 0 !important; max-width: 100% !important; }
@@ -56,7 +74,7 @@
 </head>
 <body class="min-h-screen flex flex-col">
 
-    <!-- แถบเมนูด้านบน -->
+    <!-- แถบเมนูนำทางด้านบน -->
     <nav class="bg-dol-800 text-white shadow-md sticky top-0 z-40 no-print">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex flex-col sm:flex-row justify-between items-center py-3 gap-3">
@@ -74,23 +92,32 @@
                         </div>
                     </div>
                 </div>
+                
+                <!-- ปุ่มปรับขนาดตัวอักษร & ปุ่มเจ้าหน้าที่ -->
                 <div class="flex items-center gap-2">
-                    <button id="btn-staff-login" onclick="openAdminModal()" class="px-3 py-1.5 rounded-lg text-xs font-medium text-dol-200/80 hover:text-white hover:bg-dol-900/50 border border-transparent hover:border-dol-600/40 transition flex items-center gap-1.5">
+                    <div class="flex items-center bg-dol-900/50 rounded-lg p-1 border border-dol-600/30 mr-1">
+                        <button onclick="adjustFontSize(-0.1)" title="ลดขนาดตัวอักษร" class="px-2 py-0.5 text-xs hover:bg-dol-700 rounded transition">ก-</button>
+                        <span class="text-[10px] text-dol-200 px-1">ขนาด</span>
+                        <button onclick="adjustFontSize(0.1)" title="เพิ่มขนาดตัวอักษร" class="px-2 py-0.5 text-sm font-bold hover:bg-dol-700 rounded transition">ก+</button>
+                    </div>
+
+                    <button id="btn-staff-login" onclick="openAdminModal()" title="เข้าสู่ระบบสำหรับเจ้าหน้าที่" class="px-3 py-1.5 rounded-lg text-xs font-medium text-dol-200/80 hover:text-white hover:bg-dol-900/50 border border-transparent hover:border-dol-600/40 transition flex items-center gap-1.5">
                         <i class="fa-solid fa-key text-[11px]"></i>
                         <span>สำหรับเจ้าหน้าที่</span>
                     </button>
                     <button id="btn-staff-logout" onclick="logoutAdmin()" class="hidden px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-red-600 hover:bg-red-700 text-white shadow transition flex items-center gap-2">
                         <i class="fa-solid fa-right-from-bracket"></i>
-                        <span>ออกจากระบบ (กลับสู่หน้าแบบสำรวจ)</span>
+                        <span>ออกจากระบบ</span>
                     </button>
                 </div>
             </div>
         </div>
     </nav>
 
+    <!-- กล่องแจ้งเตือน Toast -->
     <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none px-4"></div>
 
-    <!-- Modal รหัสผ่านเจ้าหน้าที่ -->
+    <!-- Modal ยืนยันรหัสผ่านเจ้าหน้าที่ -->
     <div id="pin-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
         <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-100">
             <div class="text-center mb-4">
@@ -101,7 +128,7 @@
                 <p class="text-sm text-gray-500 mt-1">เฉพาะเจ้าหน้าที่สำนักงานที่ดินกรุงเทพมหานคร สาขาบางเขน</p>
             </div>
             <div class="space-y-4">
-                <input type="password" id="admin-pin-input" maxlength="20" placeholder="กรอกรหัสผ่านเจ้าหน้าที่..." 
+                <input type="password" id="admin-pin-input" maxlength="20" placeholder="กรอกรหัสผ่านเจ้าหน้าที่ (ค่าเริ่มต้น: 1234)" 
                     class="w-full text-center text-lg tracking-wider font-bold border-2 border-gray-300 rounded-xl py-3 focus:outline-none focus:border-dol-600"
                     onkeypress="if(event.key === 'Enter') verifyAdminPin()">
                 <div class="flex gap-3">
@@ -112,7 +139,7 @@
         </div>
     </div>
 
-    <!-- Modal เปลี่ยนรหัสผ่าน -->
+    <!-- Modal เปลี่ยนรหัสผ่านเจ้าหน้าที่ -->
     <div id="change-pass-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
         <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-100">
             <div class="flex items-center gap-3 text-dol-800 mb-4 border-b pb-3">
@@ -122,42 +149,26 @@
             <div class="space-y-3">
                 <div>
                     <label class="block text-xs font-semibold text-gray-600 mb-1">รหัสผ่านเดิม</label>
-                    <input type="password" id="old-pass-input" class="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm">
+                    <input type="password" id="old-pass-input" class="w-full border border-gray-300 rounded-xl px-3 py-2 focus:outline-none focus:border-dol-600">
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-gray-600 mb-1">รหัสผ่านใหม่ (อย่างน้อย 4 ตัวอักษร)</label>
-                    <input type="password" id="new-pass-input" class="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm">
+                    <input type="password" id="new-pass-input" class="w-full border border-gray-300 rounded-xl px-3 py-2 focus:outline-none focus:border-dol-600">
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-gray-600 mb-1">ยืนยันรหัสผ่านใหม่</label>
-                    <input type="password" id="confirm-pass-input" class="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm">
+                    <input type="password" id="confirm-pass-input" class="w-full border border-gray-300 rounded-xl px-3 py-2 focus:outline-none focus:border-dol-600">
                 </div>
                 <div class="flex gap-3 pt-2">
-                    <button onclick="closeChangePassModal()" class="flex-1 py-2 rounded-xl border border-gray-300 text-gray-700 font-semibold text-sm">ยกเลิก</button>
-                    <button onclick="saveNewPassword()" class="flex-1 py-2 rounded-xl bg-dol-700 text-white font-semibold text-sm hover:bg-dol-800">บันทึกรหัสผ่าน</button>
+                    <button onclick="closeChangePassModal()" class="flex-1 py-2 px-4 rounded-xl border border-gray-300 text-gray-700 font-semibold hover:bg-gray-50">ยกเลิก</button>
+                    <button onclick="saveNewPassword()" class="flex-1 py-2 px-4 rounded-xl bg-dol-700 text-white font-semibold hover:bg-dol-800">บันทึกรหัสผ่าน</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- ส่วนเนื้อหาหลัก -->
-    <main class="flex-1 max-w-5xl w-full mx-auto px-4 py-6 sm:py-8">
-        
-        <!-- แท็บ 1: หน้าแบบสำรวจสำหรับประชาชน -->
-        <div id="tab-survey" class="tab-content space-y-6">
-            <div class="bg-gradient-to-r from-dol-800 to-dol-700 text-white rounded-2xl p-6 sm:p-8 shadow-lg text-center relative overflow-hidden">
-                <span class="inline-block bg-dol-900/60 text-dol-100 text-xs font-medium px-3 py-1 rounded-full border border-dol-500/40 mb-3">
-                    กรมที่ดิน กระทรวงมหาดไทย
-                </span>
-                <h2 class="text-2xl sm:text-3xl font-bold mb-2">แบบสำรวจความต้องการของผู้รับบริการ</h2>
-                <p class="text-dol-100 font-medium text-base sm:text-lg mb-4">ของสำนักงานที่ดินกรุงเทพมหานคร สาขาบางเขน</p>
-                <div class="bg-dol-900/40 rounded-xl p-4 max-w-2xl mx-auto text-xs sm:text-sm text-dol-50 leading-relaxed border border-dol-600/30">
-                    แบบสอบถามฉบับนี้จัดทำขึ้นเพื่อเป็นข้อมูลในการออกแบบบริการของสำนักงานที่ดินให้สอดคล้องกับความต้องการของผู้รับบริการ เพื่อประโยชน์ในการพัฒนาปรับปรุงงานบริการของสำนักงานที่ดินให้เกิดประโยชน์สูงสุด
-                </div>
-            </div>
-
-            <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-200 flex flex-wrap justify-between items-center gap-4">
-                <div class="flex items-center gap-2">
-                    <i class="fa-regular fa-calendar-days text-dol-700"></i>
-                    <label for="service-date" class="text-sm font-semibold text-gray-700">วันที่รับบริการ:</label>
-                    ขนาดตัวอักษร:
+    <!-- ========================================== -->
+    <!-- ส่วนที่ 1: หน้าแบบสำรวจสำหรับผู้รับบริการ (Public) -->
+    <!-- ========================================== -->
+    <main id="tab-survey" class="tab-content flex-1 max-w-4xl w-full mx-auto px-4 py-6 sm:py-8">
+        <!-- แบนเนอร์หัวข้อ -->
