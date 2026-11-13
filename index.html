@@ -787,7 +787,7 @@
         let trendChartInstance = null;
         let servicePieChartInstance = null;
 
-            async function initCloudStorage() {
+                   async function initCloudStorage() {
             const statusBadge = document.getElementById('cloud-status-badge');
             try {
                 const firebaseConfig = {
@@ -846,7 +846,6 @@
                 statusBadge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-red-400"></span> โหมดออฟไลน์`;
             }
         }
-
 
         function getStaffPassword() {
             return currentStaffPassword || '@bangkhen';
